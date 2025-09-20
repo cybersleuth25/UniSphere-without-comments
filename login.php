@@ -2,14 +2,12 @@
 session_start();
 include 'connect.php';
 
-// Set headers for JSON response
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['username'];
     $password = $_POST['password'];
 
-    // Fetch user by email
     $stmt = $conn->prepare("SELECT username, email, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -18,11 +16,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows == 1) {
         $row = $result->fetch_assoc();
 
-        // Verify password
         if (password_verify($password, $row['password'])) {
-            // Set session variables
             $_SESSION['user_email'] = $row['email'];
-            $_SESSION['user_role'] = $row['role']; // Assuming 'role' is a column in your 'users' table
+            $_SESSION['user_role'] = $row['role'];
 
             echo json_encode(["success" => true, "message" => "Login successful.", "user" => ["username" => $row['username'], "email" => $row['email'], "role" => $row['role']]]);
         } else {

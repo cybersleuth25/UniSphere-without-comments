@@ -9,7 +9,6 @@ if (!isset($_SESSION['user_email'])) {
 
 $current_user_email = $_SESSION['user_email'];
 $user = null;
-// FIXED: Added the 'role' column to the database query
 $stmt = $conn->prepare("SELECT username, email, bio, avatar_path, role FROM users WHERE email = ?");
 $stmt->bind_param("s", $current_user_email);
 if ($stmt->execute()) {

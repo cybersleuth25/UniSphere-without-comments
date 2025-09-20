@@ -1,8 +1,7 @@
-/**********************
-* State & Helpers
-**********************/
 const AUTH_KEY = 'unisphere_auth';
 let currentUser = { username: null, email: null, role: null, avatarSeed: null, avatar_path: null };
+const imagePreviewModal = document.getElementById('imagePreviewModal');
+const fullSizeImage = document.getElementById('fullSizeImage');
 
 function getAuthInfo() {
   try {
@@ -14,17 +13,24 @@ function getAuthInfo() {
     };
   } catch (e) { return { username: null, email: null, role: null, avatarSeed: null, avatar_path: null }; }
 }
+
+function debounce(func, delay) {
+  let timeout;
+  return function(...args) {
+    const context = this;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), delay);
+  };
+}
+
 function generateAvatarUrl(username, seed) {
     const seedValue = seed || username;
     return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(seedValue)}`;
 }
 function getAvatarDisplayUrl(user) {
-    if (user.avatar_path) return user.avatar_path + '?t=' + new Date().getTime();
+    if (user.avatar_path) return `${user.avatar_path}?t=${new Date().getTime()}`;
     return generateAvatarUrl(user.username, user.avatarSeed);
 }
-/**********************
-* Rendering & Main Logic
-**********************/
 const tabs = document.querySelectorAll('.tab');
 const contentArea = document.getElementById('contentArea');
 const searchInput = document.getElementById('searchInput');
@@ -58,24 +64,66 @@ function fetchPostsAndRender(tab) {
           const isAdmin = currentUser.role === 'admin';
           const showEditDelete = isAdmin || isAuthor;
           const imageHtml = x.image ? `<div class="thumb image" style="background-image: url('${x.image}')"></div>` : `<div class="thumb">${x.postType.slice(0, 3).toUpperCase()}</div>`;
+          
           return `<article class="card ${x.postType}" data-post-id="${x.id}" data-post-raw='${JSON.stringify(x)}'>
-            ${imageHtml}<div style="flex:1"><h3>${x.title}</h3><p>${x.description}</p>
-            ${showEditDelete ? `<div class="actions"><button class="btn secondary edit-btn">Edit</button><button class="btn secondary delete-btn">Delete</button></div>` : ''}
-            </div></article>`;
+            ${imageHtml}
+            <div class="card-content">
+              <h3>${x.title}</h3>
+              <div class="description-wrapper">
+                <p class="card-description">${x.description}</p>
+                <button class="read-more-btn">Read More</button>
+              </div>
+              ${showEditDelete ? `<div class="actions"><button class="btn secondary edit-btn">Edit</button><button class="btn secondary delete-btn">Delete</button></div>` : ''}
+            </div>
+          </article>`;
         }).join('');
+
         contentArea.innerHTML = `<div class="cards">${cardsHTML}</div>`;
         document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));
         document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleDeleteClick));
+        
+        document.querySelectorAll('.card-description').forEach(desc => {
+            if (desc.scrollHeight > desc.clientHeight) {
+                const readMoreBtn = desc.nextElementSibling;
+                if(readMoreBtn && readMoreBtn.classList.contains('read-more-btn')) {
+                    readMoreBtn.classList.add('visible');
+                }
+            }
+        });
+
+        document.querySelectorAll('.read-more-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const description = e.target.previousElementSibling;
+            const card = e.target.closest('.card');
+            
+            description.classList.toggle('expanded');
+
+            if (description.classList.contains('expanded')) {
+              e.target.textContent = 'Read Less';
+              card.style.height = 'auto';
+            } else {
+              e.target.textContent = 'Read More';
+              card.style.height = '200px';
+            }
+          });
+        });
+
+        document.querySelectorAll('.thumb.image').forEach(thumb => {
+          thumb.addEventListener('click', (e) => {
+            const card = e.target.closest('.card');
+            const postData = JSON.parse(card.dataset.postRaw);
+            if (postData.image && imagePreviewModal) {
+              fullSizeImage.src = postData.image;
+              imagePreviewModal.classList.add('show');
+            }
+          });
+        });
       });
   }, 500);
 }
-
-/**********************
-* Modal & Form Handling
-**********************/
 const postModal = document.getElementById('postModal');
 function handleEditClick(e) {
-    const card = e.target.closest('.card'); const postData = JSON.parse(card.dataset.raw);
+    const card = e.target.closest('.card'); const postData = JSON.parse(card.dataset.postRaw);
     document.getElementById('postId').value = postData.id; document.getElementById('postType').value = postData.postType;
     document.getElementById('postTitle').value = postData.title; document.getElementById('postDesc').value = postData.description;
     document.querySelector('#postModal h2').textContent = 'Edit Post'; if(postModal) postModal.classList.add('show');
@@ -108,10 +156,14 @@ if (postModal) {
     });
     document.querySelector('.close-btn')?.addEventListener('click', () => postModal.classList.remove('show'));
 }
-
-/**********************
-* Theme & Auth
-**********************/
+if (imagePreviewModal) {
+    imagePreviewModal.querySelector('.close-btn').addEventListener('click', () => imagePreviewModal.classList.remove('show'));
+    imagePreviewModal.addEventListener('click', (e) => {
+        if (e.target === imagePreviewModal) {
+            imagePreviewModal.classList.remove('show');
+        }
+    });
+}
 const themeToggleCheckbox = document.getElementById('checkbox');
 const body = document.body;
 function toggleTheme() {
@@ -176,10 +228,6 @@ if (signupForm) {
     });
   });
 }
-
-/**********************
-* Particles JS Loader
-**********************/
 function loadParticles() {
   const isLight = document.body.classList.contains('light-theme');
   const config = isLight ? 'particles-config-light.js' : 'particles-config.js';
@@ -198,11 +246,18 @@ function loadParticles() {
   };
   document.body.appendChild(particleScript);
 }
-
-/**********************
-* Initial Load & Event Listeners
-**********************/
+function loadFooter() {
+  const footerPlaceholder = document.getElementById('footer-placeholder');
+  if (footerPlaceholder) {
+    fetch('footer.php')
+      .then(response => response.text())
+      .then(data => {
+        footerPlaceholder.innerHTML = data;
+      });
+  }
+}
 document.addEventListener('DOMContentLoaded', () => {
+    loadFooter();
     checkLoginStatus();
     loadParticles();
     const currentPage = window.location.pathname.split('/').pop();
@@ -210,7 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage === '' || currentPage === 'index.html') {
         setActiveTab('announcements');
         if (tabs) tabs.forEach(t => t.addEventListener('click', () => setActiveTab(t.dataset.tab)));
-        if (searchInput) { searchInput.addEventListener('input', () => { const active = document.querySelector('.tab.active')?.dataset.tab; if(active) fetchPostsAndRender(active); }); }
+        if (searchInput) { 
+          const debouncedSearch = debounce(() => {
+            const active = document.querySelector('.tab.active')?.dataset.tab;
+            if(active) fetchPostsAndRender(active);
+          }, 300);
+          searchInput.addEventListener('input', debouncedSearch);
+        }
         
         const addPostBtn = document.getElementById('addPostBtn');
         if(addPostBtn) {
@@ -260,7 +321,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(); formData.append('avatar', file);
             fetch('upload-avatar.php', { method: 'POST', body: formData }).then(res => res.json()).then(data => {
                 if (data.success) {
-                    let user = getAuthInfo(); user.avatar_path = data.filepath;
+                    let user = getAuthInfo(); 
+                    user.avatar_path = data.filepath;
                     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
                     avatarImg.src = getAvatarDisplayUrl(user);
                 } else { alert(data.message); }
@@ -298,7 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// FIXED: Add event listener to sync login status across tabs
 window.addEventListener('storage', (event) => {
     if (event.key === AUTH_KEY) {
         checkLoginStatus();

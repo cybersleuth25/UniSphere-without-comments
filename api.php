@@ -14,7 +14,6 @@ $is_admin = (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'
 
 switch ($method) {
     case 'GET':
-        // This part is unchanged and correct
         $postType = $_GET['postType'] ?? '';
         $search = $_GET['search'] ?? '';
         if (empty($postType)) { echo json_encode([]); exit; }
@@ -33,7 +32,6 @@ switch ($method) {
         break;
 
     case 'POST':
-        // This part is unchanged and correct
         if (!isset($_SESSION['user_email'])) {
             http_response_code(401);
             echo json_encode(["success" => false, "message" => "Authentication required."]);
@@ -86,7 +84,6 @@ switch ($method) {
         $check->execute();
         $post = $check->get_result()->fetch_assoc();
 
- 
         if ($post && ($is_admin || $post['author'] === $author_email)) {
             $stmt = $conn->prepare("UPDATE posts SET title = ?, description = ? WHERE id = ?");
             $stmt->bind_param("sss", $title, $description, $id);
@@ -111,6 +108,7 @@ switch ($method) {
         $check->bind_param("s", $id);
         $check->execute();
         $post = $check->get_result()->fetch_assoc();
+
         if ($post && ($is_admin || $post['author'] === $author_email)) {
             $stmt = $conn->prepare("DELETE FROM posts WHERE id = ?");
             $stmt->bind_param("s", $id);

@@ -24,14 +24,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // Check if token is expired
         if (strtotime($user['reset_token_expiry']) <= time()) {
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "Reset link has expired."]);
             exit;
         }
 
-        // Token is valid, update the password and clear the token
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
         $update = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?");
         $update->bind_param("ss", $hashed_password, $user['email']);

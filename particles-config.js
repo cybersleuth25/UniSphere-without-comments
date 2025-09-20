@@ -46,7 +46,8 @@ particlesJS("particles-js", {
         "mode": "grab"
       },
       "onclick": {
-        "enable": false
+        "enable": true,
+        "mode": "push"
       },
       "resize": true
     },
@@ -54,6 +55,9 @@ particlesJS("particles-js", {
       "grab": {
         "distance": 140,
         "line_opacity": 1
+      },
+      "push": {
+        "particles_nb": 4
       }
     }
   },

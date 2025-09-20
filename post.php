@@ -28,7 +28,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ✅ Navbar -->
   <nav class="navbar">
     <div class="logo">UniSphere</div>
     <ul>
@@ -39,7 +38,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </ul>
   </nav>
 
-  <!-- ✅ Post Form -->
   <div class="container">
     <h2>Create a Post</h2>
     <form method="POST" action="">
@@ -61,4 +59,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   </div>
 </body>
 </html>
-

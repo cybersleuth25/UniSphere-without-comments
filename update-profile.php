@@ -21,7 +21,6 @@ if (empty($new_username) || empty($new_email)) {
     exit;
 }
 
-// Update user in the database
 $stmt = $conn->prepare("UPDATE users SET username=?, email=?, bio=? WHERE email=?");
 $stmt->bind_param("ssss", $new_username, $new_email, $new_bio, $current_email);
 
