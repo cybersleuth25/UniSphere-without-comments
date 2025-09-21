@@ -207,12 +207,33 @@ function checkLoginStatus() {
   }
 }
 
+function showToast(message, type = 'success') {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+    }
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault(); const formData = new FormData(loginForm);
     fetch('login.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
-        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); window.location.href = 'index.html'; }
+        if (data.success) { 
+            localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); 
+            showToast(data.message);
+            setTimeout(() => {
+                window.location.href = 'index.html'; 
+            }, 1000);
+        }
         else { alert(data.message); }
     });
   });
@@ -223,7 +244,7 @@ if (signupForm) {
   signupForm.addEventListener('submit', (e) => {
     e.preventDefault(); const formData = new FormData(signupForm);
     fetch('signup.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
-        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); window.location.href = 'index.html'; }
+        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); showToast(data.message); setTimeout(() => { window.location.href = 'index.html'; }, 1000); }
         else { alert(data.message); }
     });
   });
@@ -280,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('postForm').reset();
                 document.getElementById('postId').value = '';
                 document.getElementById('postType').value = activeTab;
-                document.querySelector('#postModal h2').textContent = `Create New Post`;
+                document.querySelector('#postModal h2').textContent = `Create New ${postType.charAt(0).toUpperCase() + postType.slice(1)}`;
                 if(postModal) postModal.classList.add('show');
             });
         }
@@ -354,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     welcomeHeading.textContent = `Hello, ${data.user.username}`;
                     emailSubheading.textContent = data.user.email;
                     editProfileModal.classList.remove('show');
+                    showToast(data.message);
                 } else { alert(data.message); }
             });
         });
@@ -365,3 +387,19 @@ window.addEventListener('storage', (event) => {
         checkLoginStatus();
     }
 });
+
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+if (forgotPasswordForm) {
+  forgotPasswordForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(forgotPasswordForm);
+    fetch('forgot-password.php', { method: 'POST', body: formData })
+      .then(response => response.json())
+      .then(data => {
+        showToast(data.message);
+      })
+      .catch(error => {
+        showToast("An error occurred. Please try again.", "error");
+      });
+  });
+}

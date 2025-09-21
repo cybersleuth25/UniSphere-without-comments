@@ -609,9 +609,8 @@ input:checked+.slider:before {
 .sidebar {
   background: var(--bg-light);
   border-radius: 12px;
-  padding: 16px;
   border: 1px solid var(--muted-elements);
-  margin-top: -60px; 
+  margin-top: -60px;
 }
 
 body.light-theme .sidebar {
@@ -758,4 +757,36 @@ body.light-theme .form-group select:focus {
   50% {
     opacity: .5;
   }
+}
+
+.toast {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 30px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.toast.toast-success {
+    background-color: #27ae60;
+}
+
+.toast.toast-error {
+    background-color: #c0392b;
+}
+
+.toast.show {
+    visibility: visible;
+    opacity: 1;
 }
